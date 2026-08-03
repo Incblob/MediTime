@@ -7,7 +7,7 @@ func TestStructs(t *testing.T) {
 		id:          "test",
 		in_schedule: false,
 		restrictions: []PersonRestriction{
-			Restriction_working_days{
+			Person_R_total_working_days{
 				days_restrictions: [7]int{0, 1, 1, 1, 0, 1, 0},
 				days_total:        4,
 				scaling:           1,
