@@ -9,7 +9,7 @@ func bool_to_int(b bool) int {
 	return 0
 }
 
-func abs_val[L constraints.Integer | constraints.Float](l L) L {
+func abs_val[L constraints.Integer | constraints.Float | constraints.Unsigned](l L) L {
 	if l < 0 {
 		return L(-l)
 	}
