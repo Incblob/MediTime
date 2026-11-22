@@ -1,26 +1,51 @@
 package optimizerobjects
 
+import (
+	"log"
+	G "optimizer/cmd/globals"
+)
+
 type Week struct {
-	persons           []Person
-	week_restrictions []W_Restr_Impl
+	Persons           []Person
+	Week_restrictions []W_Restr_Impl
+	Badness_score     float32
+}
+
+func (w Week) Calculate_badness() {
+	log.Println("calculating bad_score for" + G.Bold + " WEEK")
+	var score float32 = 0
+	for _, r := range w.Week_restrictions {
+		r.Calculate_badness_score(w)
+		score += r.GetScore()
+	}
 }
 
 // ------------------- Restrictions
 
 type W_Restr_Impl interface {
 	validate() bool
-	badness_score(w Week) float32
+	Calculate_badness_score(w Week)
+	GetScore() float32
 }
 
 // ----- workers per day
 type W_Restr_workers_per_day struct {
-	W_Restr_Impl
-	days [7]uint
+	Days  [7]uint
+	score float32
 }
 
-func (w_r W_Restr_workers_per_day) badness_score(week Week) float32 {
+// func (w_r W_Restr_workers_per_day)get_score() float32{
+// 	return w_r.score
+// }
+
+func (w_r W_Restr_workers_per_day) GetScore() float32 {
+	return w_r.score
+}
+
+func (w_r *W_Restr_workers_per_day) Calculate_badness_score(week Week) {
+	log.Println("\tcalculating bad_score for" + G.Bold + "restriction" + G.Reset + G.Underline + " workers_per_day")
 	var days_workers [7]uint
-	for _, p := range week.persons {
+	for _, p := range week.Persons {
 		for i, d := range p.days {
 			if d.current_hours > 0 {
 				days_workers[i] += 1
@@ -29,10 +54,18 @@ func (w_r W_Restr_workers_per_day) badness_score(week Week) float32 {
 	}
 	var tot uint = 0
 
-	for i, _ := range days_workers {
-		tot += abs_val(days_workers[i] - w_r.days[i])
+	for i := range days_workers {
+		tot += abs_val(days_workers[i] - w_r.Days[i])
 	}
-	return float32(tot)
+	w_r.score = float32(tot)
+	// return float32(tot)
 }
 
-// -----
+func (w_r W_Restr_workers_per_day) validate() bool {
+	for _, d := range w_r.Days {
+		if d < 0 {
+			return false
+		}
+	}
+	return true
+}
