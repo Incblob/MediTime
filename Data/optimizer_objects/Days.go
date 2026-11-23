@@ -2,6 +2,7 @@ package optimizerobjects
 
 import (
 	"log"
+	"math/rand/v2"
 	G "optimizer/cmd/globals"
 )
 
@@ -79,9 +80,32 @@ func (d Day) GetScore() float32 {
 	return d.badness_score
 }
 
-func (d Day) make_change() {
-	log.Printf("making"+G.Underline+"change"+G.Reset+" on day %v", d.nr)
-	//TODO
-	panic("Not implemented")
+func (d *Day) Make_change() {
+	if !d.available {
+		log.Panicf("trying to change NOT AVAILABLE Day %v", d.nr)
+	}
+	// selected_change := rand.Int32N(int32(len(available_changes)))
+	change_nr := rand.IntN(len(day_available_changes))
+	day_available_changes[change_nr](d)
+	log.Printf("making"+G.Underline+"change %v"+G.Reset+" on day %v", change_nr, d.nr)
 	d.Calculate_badness()
+}
+
+func (d *Day) change_hours() {
+	const amount float32 = 2
+	//figure out direction of change
+	direction := rand.Float32()
+	var change bool = true
+	if direction > 0.5 {
+		change = false
+	}
+	if change {
+		d.current_hours -= amount
+	} else {
+		d.current_hours += amount
+	}
+}
+
+var day_available_changes = []func(d *Day){
+	(*Day).change_hours,
 }

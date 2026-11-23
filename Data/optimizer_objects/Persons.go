@@ -3,6 +3,7 @@ package optimizerobjects
 import (
 	"fmt"
 	"log"
+	"math/rand/v2"
 	G "optimizer/cmd/globals"
 )
 
@@ -19,22 +20,25 @@ const (
 // }
 
 func MakePerson(name string, days [7]Day, restrictions []P_Restr_impl) Person {
-	return Person{
-		id:            name,
-		days:          days,
-		in_schedule:   true,
-		restrictions:  restrictions,
-		badness_score: 0,
+	p := Person{
+		id:             name,
+		days:           days,
+		in_schedule:    true,
+		restrictions:   restrictions,
+		badness_score:  0,
+		available_days: []*Day{},
 	}
-
+	p.populate_available_days()
+	return p
 }
 
 type Person struct {
-	id            string
-	days          [7]Day
-	in_schedule   bool
-	restrictions  []P_Restr_impl
-	badness_score float32 // only update on change
+	id             string
+	days           [7]Day
+	in_schedule    bool
+	restrictions   []P_Restr_impl
+	badness_score  float32 // only update on change
+	available_days []*Day
 	// days_working_sheduled [7]int // Restriction_working_days
 }
 
@@ -46,6 +50,15 @@ func (p Person) validate() (ValReturn, string) {
 	}
 
 	return val_ok, ""
+}
+
+func (p *Person) populate_available_days() {
+	p.available_days = []*Day{}
+	for i := range p.days {
+		if p.days[i].available {
+			p.available_days = append(p.available_days, &p.days[i])
+		}
+	}
 }
 
 // returns the Person restriction score + the individual day scores
@@ -91,7 +104,26 @@ func (p Person) get_working_days() int {
 
 // MOVES
 
-func (p Person) change_day() {
-	log.Printf(G.Bold+"Changing day"+G.Reset+" for person %v", p.id)
-	panic("Not implemented")
+func (p *Person) change_day() {
+
+	if len(p.available_days) < 1 {
+		log.Panicf("Person % has no available days!", p.id)
+	}
+
+	day_change := p.available_days[rand.IntN(len(p.days))]
+	log.Printf(G.Bold+"Changing day %v"+G.Reset+" for person %v", day_change.nr, p.id)
+
+	day_change.Make_change()
+
+}
+
+func (p *Person) Make_change() {
+	change_nr := rand.IntN(len(person_available_changes))
+	person_available_changes[change_nr](p)
+	log.Printf("making"+G.Underline+"change %v"+G.Reset+" on Person %v", change_nr, p.id)
+	p.Calculate_badness()
+}
+
+var person_available_changes = []func(p *Person){
+	(*Person).change_day,
 }

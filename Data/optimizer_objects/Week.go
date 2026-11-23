@@ -2,6 +2,7 @@ package optimizerobjects
 
 import (
 	"log"
+	"math/rand/v2"
 	G "optimizer/cmd/globals"
 )
 
@@ -68,4 +69,12 @@ func (w_r W_Restr_workers_per_day) validate() bool {
 		}
 	}
 	return true
+}
+
+// optimization
+func (w *Week) Make_change() {
+
+	change_person := rand.IntN(len(w.Persons))
+	log.Printf("making"+G.Underline+"change"+G.Reset+" on Person %v", w.Persons[change_person].id)
+	w.Persons[change_person].Make_change()
 }
