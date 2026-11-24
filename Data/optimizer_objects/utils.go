@@ -8,6 +8,12 @@ func bool_to_int(b bool) int {
 	}
 	return 0
 }
+func bool_to_float(b bool) float32 {
+	if b {
+		return 1
+	}
+	return 0
+}
 
 func abs_val[L constraints.Integer | constraints.Float | constraints.Unsigned](l L) L {
 	if l < 0 {

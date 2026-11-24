@@ -1,7 +1,8 @@
 package optimizerobjects
 
 import (
-	"log"
+	"fmt"
+	"log/slog"
 	"math/rand/v2"
 	G "optimizer/cmd/globals"
 )
@@ -13,7 +14,7 @@ type Week struct {
 }
 
 func (w Week) Calculate_badness() {
-	log.Println("calculating bad_score for" + G.Bold + " WEEK")
+	slog.Info("calculating bad_score for" + G.Bold + " WEEK")
 	var score float32 = 0
 	for _, r := range w.Week_restrictions {
 		r.Calculate_badness_score(w)
@@ -44,7 +45,7 @@ func (w_r W_Restr_workers_per_day) GetScore() float32 {
 }
 
 func (w_r *W_Restr_workers_per_day) Calculate_badness_score(week Week) {
-	log.Println("\tcalculating bad_score for" + G.Bold + "restriction" + G.Reset + G.Underline + " workers_per_day")
+	slog.Info("\tcalculating bad_score for" + G.Bold + "restriction" + G.Reset + G.Underline + " workers_per_day")
 	var days_workers [7]uint
 	for _, p := range week.Persons {
 		for i, d := range p.days {
@@ -75,6 +76,6 @@ func (w_r W_Restr_workers_per_day) validate() bool {
 func (w *Week) Make_change() {
 
 	change_person := rand.IntN(len(w.Persons))
-	log.Printf("making"+G.Underline+"change"+G.Reset+" on Person %v", w.Persons[change_person].id)
+	slog.Debug(fmt.Sprintf("making"+G.Underline+"change"+G.Reset+" on Person %v", w.Persons[change_person].id))
 	w.Persons[change_person].Make_change()
 }

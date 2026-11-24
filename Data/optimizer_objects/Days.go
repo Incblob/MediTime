@@ -1,7 +1,8 @@
 package optimizerobjects
 
 import (
-	"log"
+	"fmt"
+	"log/slog"
 	"math/rand/v2"
 	G "optimizer/cmd/globals"
 )
@@ -16,33 +17,39 @@ const (
 	Sunday
 )
 
-func Make_day(num int, hours float32) Day {
+func Make_day(num int, should_hours float32, max_hours float32) Day {
 	var available bool
 	var restriction []D_Restr_Impl
 
-	if hours > 0 {
+	restriction = append(restriction, Make_day_R_max_hours(max_hours))
+
+	if should_hours > 0 {
 		available = true
-		restriction = []D_Restr_Impl{&Day_R_hours{should_hours: hours}}
+		restriction = append(restriction, Make_day_R_hours(should_hours))
 	} else {
 		available = false
+		restriction = append(restriction, Make_day_R_not_available())
+
 	}
 
-	return Day{
+	var day = Day{
 		nr:            num,
 		available:     available,
 		current_hours: 0,
 		restrictions:  restriction,
 		badness_score: 0,
 	}
+	day.validate()
+	return day
 }
 
 func MakeLimitedDays(available [7]bool) [7]Day {
 	var days = [7]Day{}
 	for i, d := range available {
 		if d {
-			days[i] = Make_day(i, 8)
+			days[i] = Make_day(i, 8, 8)
 		} else {
-			days[i] = Make_day(i, 0)
+			days[i] = Make_day(i, 0, 8)
 		}
 	}
 	return days
@@ -51,10 +58,10 @@ func MakeLimitedDays(available [7]bool) [7]Day {
 func MakeNormal5Days() [7]Day {
 	var days = [7]Day{}
 	for i := range 5 {
-		days[i] = Make_day(i, 8)
+		days[i] = Make_day(i, 8, 8)
 	}
 	for i := 5; i < 7; i++ {
-		days[i] = Make_day(i, 0)
+		days[i] = Make_day(i, 0, 8)
 	}
 	return days
 }
@@ -67,8 +74,18 @@ type Day struct {
 	badness_score float32
 }
 
+func (d Day) validate() (bool, string) {
+	slog.Info(fmt.Sprintf("validating Day %v", d.nr))
+	for _, r := range d.restrictions {
+		if e, s := r.validate(); e != true {
+			panic(fmt.Sprintf("!Error for %v: %v", d.nr, s))
+		}
+	}
+	return true, ""
+}
+
 func (d *Day) Calculate_badness() {
-	log.Printf("\tcalculating bad_score for "+G.Bold+" DAY %v", d.nr)
+	slog.Debug(fmt.Sprintf("\tcalculating bad_score for "+G.Bold+" DAY %v", d.nr))
 	var tot float32 = 0
 	for _, restriction := range d.restrictions {
 		restriction.calculate_badness(*d)
@@ -82,24 +99,24 @@ func (d Day) GetScore() float32 {
 
 func (d *Day) Make_change() {
 	if !d.available {
-		log.Panicf("trying to change NOT AVAILABLE Day %v", d.nr)
+		panic(fmt.Sprintf("trying to change NOT AVAILABLE Day %v", d.nr))
 	}
 	// selected_change := rand.Int32N(int32(len(available_changes)))
 	change_nr := rand.IntN(len(day_available_changes))
 	day_available_changes[change_nr](d)
-	log.Printf("making"+G.Underline+"change %v"+G.Reset+" on day %v", change_nr, d.nr)
+	slog.Debug(fmt.Sprintf("making"+G.Underline+"change %v"+G.Reset+" on day %v", change_nr, d.nr))
 	d.Calculate_badness()
 }
 
 func (d *Day) change_hours() {
 	const amount float32 = 2
-	//figure out direction of change
-	direction := rand.Float32()
-	var change bool = true
-	if direction > 0.5 {
-		change = false
+	//figure out direction of change_up
+	var change_up bool = false
+	if rand.Float32() > 0.5 {
+		change_up = true
 	}
-	if change {
+
+	if change_up {
 		d.current_hours -= amount
 	} else {
 		d.current_hours += amount

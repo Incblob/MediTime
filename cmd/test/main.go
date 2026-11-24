@@ -1,17 +1,19 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"log/slog"
 	opto "optimizer/Data/optimizer_objects"
 	G "optimizer/cmd/globals"
 )
 
 func main() {
 
-	// log.SetFlags(log.Lshortfile)
+	// slog.SetFlags(slog.Lshortfile)
 	log.SetPrefix(G.Reset)
 
-	log.Println("making person")
+	slog.Info("making person")
 	var personA = opto.MakePerson(
 		"A",
 		opto.MakeNormal5Days(),
@@ -20,7 +22,7 @@ func main() {
 			&opto.Person_R_total_working_days{Total_days: 5, Scaling: 1},
 		})
 
-	log.Println("making personB")
+	slog.Info("making personB")
 	var personB = opto.MakePerson(
 		"B",
 		opto.MakeLimitedDays([7]bool{true, true, true, false, false, false, false}),
@@ -28,7 +30,7 @@ func main() {
 			&opto.Person_R_total_working_hours{Total_time: 40, Scaling: 1},
 		})
 
-	log.Println("making Week")
+	slog.Info("making Week")
 	var week = opto.Week{
 		Persons: []opto.Person{personA, personB},
 		Week_restrictions: []opto.W_Restr_Impl{
@@ -47,7 +49,7 @@ func optimize(week opto.Week) {
 		person.Calculate_badness()
 		base_score += person.GetScore()
 	}
-	log.Printf(G.CGreen+G.Bold+"Base Score calculated: %v\n", base_score)
+	slog.Info(fmt.Sprintf(G.CGreen+G.Bold+"Base Score calculated: %v\n", base_score))
 	// for i := 0; i < 100; i++ {
 
 	// }

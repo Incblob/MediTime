@@ -2,7 +2,7 @@ package optimizerobjects
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"math/rand/v2"
 	G "optimizer/cmd/globals"
 )
@@ -29,6 +29,7 @@ func MakePerson(name string, days [7]Day, restrictions []P_Restr_impl) Person {
 		available_days: []*Day{},
 	}
 	p.populate_available_days()
+	p.validate()
 	return p
 }
 
@@ -42,14 +43,20 @@ type Person struct {
 	// days_working_sheduled [7]int // Restriction_working_days
 }
 
-func (p Person) validate() (ValReturn, string) {
+func (p Person) validate() (bool, string) {
+	slog.Info(fmt.Sprintf("validating Person %v", p.id))
 	for _, r := range p.restrictions {
 		if e, s := r.validate(); e != true {
 			panic(fmt.Sprintf("!Error for %v: %v", p.id, s))
 		}
 	}
+	for _, d := range p.days {
+		if e, s := d.validate(); e != true {
+			panic(fmt.Sprintf("!Error for %v: %v", p.id, s))
+		}
+	}
 
-	return val_ok, ""
+	return true, ""
 }
 
 func (p *Person) populate_available_days() {
@@ -74,14 +81,14 @@ func (p Person) GetScore() float32 {
 }
 
 func (p *Person) Calculate_badness() {
-	log.Printf(G.CPurple+"calculating bad_score for"+G.Bold+" person %v", p.id)
+	slog.Debug(fmt.Sprintf(G.CPurple+"calculating bad_score for"+G.Bold+" person %v", p.id))
 	// calc for person restrictions
 	p.badness_score = 0
 	for _, r := range p.restrictions {
 		r.calculate_badness(*p)
 		p.badness_score += r.GetScore()
 	}
-	log.Printf(G.Bold+G.CCyan+"Score person %v == %v", p.id, p.badness_score)
+	slog.Debug(G.Bold+G.CCyan+"Score person %v == %v", p.id, p.badness_score)
 	// also calc for days subobjects
 	for _, day := range p.days {
 		if day.available {
@@ -104,26 +111,33 @@ func (p Person) get_working_days() int {
 
 // MOVES
 
+func (p *Person) Make_change() {
+	change_nr := rand.IntN(len(person_available_changes))
+	person_available_changes[change_nr](p)
+	slog.Debug(fmt.Sprintf("making"+G.Underline+"change %v"+G.Reset+" on Person %v", change_nr, p.id))
+	p.Calculate_badness()
+}
+
 func (p *Person) change_day() {
 
 	if len(p.available_days) < 1 {
-		log.Panicf("Person % has no available days!", p.id)
+		panic(fmt.Sprintf("Person %v has no available days!", p.id))
 	}
 
 	day_change := p.available_days[rand.IntN(len(p.days))]
-	log.Printf(G.Bold+"Changing day %v"+G.Reset+" for person %v", day_change.nr, p.id)
+	slog.Debug(fmt.Sprintf(G.Bold+"Changing day %v"+G.Reset+" for person %v", day_change.nr, p.id))
 
 	day_change.Make_change()
 
 }
-
-func (p *Person) Make_change() {
-	change_nr := rand.IntN(len(person_available_changes))
-	person_available_changes[change_nr](p)
-	log.Printf("making"+G.Underline+"change %v"+G.Reset+" on Person %v", change_nr, p.id)
-	p.Calculate_badness()
+func (p *Person) change_day_availability() {
+	day := &p.days[rand.IntN(len(p.days))]
+	slog.Debug(fmt.Sprintf(G.Bold+"Changing day %v"+G.Reset+" for person %v to AVAILABLE", day.nr, p.id))
+	day.available = true
+	p.populate_available_days()
 }
 
 var person_available_changes = []func(p *Person){
 	(*Person).change_day,
+	(*Person).change_day_availability,
 }

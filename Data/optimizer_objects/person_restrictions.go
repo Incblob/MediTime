@@ -1,7 +1,8 @@
 package optimizerobjects
 
 import (
-	"log"
+	"fmt"
+	"log/slog"
 	G "optimizer/cmd/globals"
 )
 
@@ -15,6 +16,12 @@ type P_Restr_impl interface {
 
 // TODO check validity of restrictions
 // --------------
+
+var scaling_map_person = map[string](float32){
+	"Person_R_total_working_hours": 5,
+	"Person_R_total_working_days":  10,
+}
+
 type Person_R_total_working_hours struct {
 	// P_Restr_impl
 	Total_time    float32
@@ -30,13 +37,13 @@ func (r Person_R_total_working_hours) validate() (bool, string) {
 }
 
 func (r *Person_R_total_working_hours) calculate_badness(p Person) {
-	log.Println("\t\t  calculating bad_score for " + G.Bold + "restriction " + G.Reset + G.Underline + "total working hours")
+	slog.Debug("\t\t  calculating bad_score for " + G.Bold + "restriction " + G.Reset + G.Underline + "total working hours")
 	var tot float32 = 0
 	for _, day := range p.days {
 		tot += float32(day.current_hours)
 	}
 	r.badness_score = tot
-	log.Printf(G.Underline+G.Bold+"Score  == %v", r.badness_score)
+	slog.Debug(fmt.Sprintf(G.Underline+G.Bold+"Score  == %v", r.badness_score))
 }
 
 func (r Person_R_total_working_hours) GetScore() float32 {
@@ -56,6 +63,10 @@ func (r Person_R_total_working_days) validate() (bool, string) {
 	if r.Total_days < 0 {
 		return false, "days total < 0"
 	}
+	if r.Total_days > 7 {
+		return false, "days total > 7"
+	}
+
 	// validate that for the person the active days are less than the total days . ?
 	// BREAKS interface
 	// var tot_active_days = 0
@@ -73,7 +84,7 @@ func (r Person_R_total_working_days) validate() (bool, string) {
 
 func (r *Person_R_total_working_days) calculate_badness(p Person) {
 
-	log.Println("\t\t  calculating bad_score for " + G.Bold + "restriction " + G.Reset + G.Underline + "total working days")
+	slog.Info("\t\t  calculating bad_score for " + G.Bold + "restriction " + G.Reset + G.Underline + "total working days")
 	var total_score float32 = 0
 
 	for _, day := range p.days {
@@ -83,7 +94,7 @@ func (r *Person_R_total_working_days) calculate_badness(p Person) {
 		// total_score += float32(bool_to_int(day.active))
 	}
 	r.badness_score = total_score
-	log.Printf(G.CCyan+G.Bold+"Score  == %v", r.badness_score)
+	slog.Info(fmt.Sprintf(G.CCyan+G.Bold+"Score  == %v", r.badness_score))
 }
 
 func (r Person_R_total_working_days) GetScore() float32 {
