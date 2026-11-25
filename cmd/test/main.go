@@ -34,7 +34,7 @@ func main() {
 	var week = opto.Week{
 		Persons: []opto.Person{personA, personB},
 		Week_restrictions: []opto.W_Restr_Impl{
-			&opto.W_Restr_workers_per_day{Days: [7]uint{2, 2, 2, 1, 1, 0, 0}},
+			&opto.W_Restr_workers_per_day{Days: [7]int{2, 2, 2, 1, 1, 0, 0}},
 		}}
 
 	optimize(week)
@@ -44,7 +44,7 @@ func main() {
 func optimize(week opto.Week) {
 	var base_score float32 = 0
 	week.Calculate_badness()
-	base_score += week.Badness_score
+	base_score += week.GetScore()
 	for _, person := range week.Persons {
 		person.Calculate_badness()
 		base_score += person.GetScore()

@@ -85,7 +85,7 @@ func (r Person_R_total_working_days) validate() (bool, string) {
 }
 
 func (r *Person_R_total_working_days) calculate_badness(p Person) {
-	slog.Info("\t\t  calculating bad_score for " + G.Bold + "restriction " + G.Reset + G.Underline + "total working days")
+	slog.Debug("\t  calculating bad_score for " + G.Bold + "restriction " + G.Reset + G.Underline + "total working days")
 	var total_score float32 = 0
 
 	for _, day := range p.days {
@@ -98,7 +98,7 @@ func (r *Person_R_total_working_days) calculate_badness(p Person) {
 	r.badness_score = abs_val(total_score - float32(r.Total_days))
 	r.badness_score /= float32(r.Total_days)
 
-	slog.Info(fmt.Sprintf(G.CCyan+G.Bold+"Score  == %v", r.badness_score))
+	slog.Debug(fmt.Sprintf(G.CCyan+G.Bold+"Score  == %v", r.badness_score))
 }
 
 func (r Person_R_total_working_days) GetScore() float32 {

@@ -39,7 +39,9 @@ func Make_day(num int, should_hours float32, max_hours float32) Day {
 		restrictions:  restriction,
 		badness_score: 0,
 	}
-	day.validate()
+	if r, s := day.validate(); r != true {
+		panic(s)
+	}
 	return day
 }
 
@@ -75,12 +77,13 @@ type Day struct {
 }
 
 func (d Day) validate() (bool, string) {
-	slog.Info(fmt.Sprintf("validating Day %v", d.nr))
+	slog.Debug(fmt.Sprintf("validating Day %v", d.nr))
 	for _, r := range d.restrictions {
 		if e, s := r.validate(); e != true {
 			panic(fmt.Sprintf("!Error for %v: %v", d.nr, s))
 		}
 	}
+
 	return true, ""
 }
 
@@ -92,6 +95,7 @@ func (d *Day) Calculate_badness() {
 		tot += restriction.GetScore()
 	}
 	d.badness_score = tot
+	slog.Info(fmt.Sprintf("\tScore for "+G.CYellow+"Day %v:"+G.Reset+G.CCyan+"%v", d.nr, d.badness_score))
 }
 func (d Day) GetScore() float32 {
 	return d.badness_score
