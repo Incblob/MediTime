@@ -42,7 +42,9 @@ func (r *Person_R_total_working_hours) calculate_badness(p Person) {
 	for _, day := range p.days {
 		tot += float32(day.current_hours)
 	}
-	r.badness_score = tot
+	// normalized to max wanted
+	r.badness_score = abs_val(tot - r.Total_time)
+	r.badness_score /= r.Total_time
 	slog.Debug(fmt.Sprintf(G.Underline+G.Bold+"Score  == %v", r.badness_score))
 }
 
@@ -83,7 +85,6 @@ func (r Person_R_total_working_days) validate() (bool, string) {
 }
 
 func (r *Person_R_total_working_days) calculate_badness(p Person) {
-
 	slog.Info("\t\t  calculating bad_score for " + G.Bold + "restriction " + G.Reset + G.Underline + "total working days")
 	var total_score float32 = 0
 
@@ -91,9 +92,12 @@ func (r *Person_R_total_working_days) calculate_badness(p Person) {
 		if day.current_hours > 0 {
 			total_score += 1
 		}
-		// total_score += float32(bool_to_int(day.active))
 	}
-	r.badness_score = total_score
+	// r.badness_score = total_score
+	// normalize to total days
+	r.badness_score = abs_val(total_score - float32(r.Total_days))
+	r.badness_score /= float32(r.Total_days)
+
 	slog.Info(fmt.Sprintf(G.CCyan+G.Bold+"Score  == %v", r.badness_score))
 }
 
